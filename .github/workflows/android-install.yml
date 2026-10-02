@@ -38,12 +38,17 @@ jobs:
           script: |
             adb install -r pepper.apk
             adb shell am start -W -n ru.peppercourse.app/.MainActivity
-            sleep 8
+            sleep 25
             adb shell pidof ru.peppercourse.app
-            adb logcat -d -s AndroidRuntime
+            adb shell dumpsys webviewupdate
+            adb logcat -d | grep -E 'chromium|CONSOLE|AndroidRuntime|WebView' || true
+            adb shell uiautomator dump /sdcard/window.xml
+            adb pull /sdcard/window.xml android15.xml
             adb exec-out screencap -p > android15.png
       - name: Save Android 15 screen
         uses: actions/upload-artifact@v4
         with:
           name: android15-screen
-          path: android15.png
+          path: |
+            android15.png
+            android15.xml
