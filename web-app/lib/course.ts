@@ -1,0 +1,8 @@
+export const STORAGE_KEY = 'pepper-course-v1';
+export type CourseState = { startDate: string; completed: number[]; notifications: boolean; time: string; sound: boolean; notified: string[]; snoozeUntil: number | null };
+export const localDate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+export const initialState = (): CourseState => ({startDate:localDate(),completed:[],notifications:false,time:'09:00',sound:true,notified:[],snoozeUntil:null});
+export const pepperCount = (day:number) => day < 1 || day >= 30 ? 0 : day <= 15 ? day : 30-day;
+export function courseDay(start:string, now = new Date()) { const [y,m,d] = start.split('-').map(Number); return Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()) - Date.UTC(y,m-1,d))/86400000)+1; }
+export function validState(input: unknown): CourseState { const fallback = initialState(); if(!input || typeof input !== 'object') return fallback; const x = input as Partial<CourseState>; const validDate = typeof x.startDate==='string' && /^\d{4}-\d{2}-\d{2}$/.test(x.startDate) && !isNaN(new Date(x.startDate+'T00:00:00').getTime()); return {startDate:validDate?x.startDate!:fallback.startDate,completed:Array.isArray(x.completed)?[...new Set(x.completed.filter(d=>Number.isInteger(d)&&d>=1&&d<=30))]:[],notifications:x.notifications===true,time:typeof x.time==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x.time)?x.time:fallback.time,sound:x.sound!==false,notified:Array.isArray(x.notified)?x.notified.filter(v=>typeof v==='string'):[],snoozeUntil:typeof x.snoozeUntil==='number'?x.snoozeUntil:null}; }
+export const pepperLabel = (n:number) => `${n} ${n===1?'горошина':n>=2&&n<=4?'горошины':'горошин'}`;

@@ -1,0 +1,1 @@
+export function Peppercorns({count,small=false}:{count:number;small?:boolean}) {return <div className={`peppercorns ${small?'small':''}`} aria-label={`${count} горошин перца`}>{Array.from({length:count},(_,i)=><img key={i} src="/images/peppercorn.png" alt="" style={{transform:`rotate(${i*47}deg) translateY(${i%3===1?-5:2}px)`}} />)}</div>;}
