@@ -1,0 +1,2 @@
+import {defineConfig} from 'vite';import react from '@vitejs/plugin-react';import tailwind from '@tailwindcss/postcss';import path from 'node:path';
+export default defineConfig({plugins:[react()],resolve:{alias:{'@':path.resolve(import.meta.dirname,'../web-app')}},publicDir:'../web-app/public',css:{postcss:{plugins:[tailwind()]}},build:{outDir:'app/src/main/assets',emptyOutDir:true,target:'es2020'}});

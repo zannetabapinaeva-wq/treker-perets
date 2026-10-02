@@ -1,0 +1,10 @@
+package ru.peppercourse.tracker;
+import android.Manifest;import android.app.*;import android.content.*;import android.content.pm.PackageManager;import android.os.Build;import org.json.*;import java.time.*;
+public class ReminderReceiver extends BroadcastReceiver {
+ @Override public void onReceive(Context c,Intent intent){try{int day=intent.getIntExtra("day",0);JSONObject s=new JSONObject(c.getSharedPreferences("course",Context.MODE_PRIVATE).getString("state","{}"));if(day<1||day>30||!s.optBoolean("notifications")||ReminderScheduler.completed(s,day))return;LocalDate start=LocalDate.parse(s.getString("startDate"));if(!start.plusDays(day-1).equals(LocalDate.now()))return;if(Build.VERSION.SDK_INT>=33&&c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return;
+ boolean sound=s.optBoolean("sound",true);String channel=sound?"daily_sound":"daily_silent";NotificationManager nm=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);NotificationChannel ch=new NotificationChannel(channel,sound?"Напоминания со звуком":"Тихие напоминания",NotificationManager.IMPORTANCE_DEFAULT);if(!sound)ch.setSound(null,null);nm.createNotificationChannel(ch);
+ long when=start.plusDays(day-1).atTime(LocalTime.parse(s.optString("time","09:00"))).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();long snooze=s.optLong("snoozeUntil",0);if(snooze>when)when=snooze;String marker=start+":"+day+":"+when;if(c.getSharedPreferences("course",Context.MODE_PRIVATE).getBoolean(marker,false))return;c.getSharedPreferences("course",Context.MODE_PRIVATE).edit().putBoolean(marker,true).apply();
+ int count=day<=15?day:30-day;PendingIntent open=PendingIntent.getActivity(c,0,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+ nm.notify(day,new Notification.Builder(c,channel).setSmallIcon(R.drawable.ic_notification).setContentTitle("Сегодня день "+day+" — отметьте выполнение курса").setContentText(day==30?"Завершение выбранного курса":"Количество горошин: "+count).setContentIntent(open).setAutoCancel(true).build());
+ }catch(Exception ignored){}}
+}
