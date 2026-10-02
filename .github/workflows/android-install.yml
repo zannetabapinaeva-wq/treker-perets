@@ -6,7 +6,7 @@ on:
     inputs:
       version:
         description: APK version to verify
-        default: '1.0.1'
+        default: '1.0.2'
         required: true
 permissions:
   contents: read
@@ -18,10 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download signed APK
         env:
-          VERSION: ${{ inputs.version || '1.0.1' }}
+          VERSION: ${{ inputs.version || '1.0.2' }}
         run: |
           curl --fail --location --retry 3 -o pepper.apk "https://github.com/zannetabapinaeva-wq/treker-perets/releases/download/v$VERSION/pepper-course-$VERSION.apk"
-          sha256sum pepper.apk
+          echo '43ddc5c5ef3b457a7f213f9dc1347bee7a62d4988cdd262e94253d39a5a008d1  pepper.apk' | sha256sum -c -
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -41,3 +41,9 @@ jobs:
             sleep 8
             adb shell pidof ru.peppercourse.app
             adb logcat -d -s AndroidRuntime
+            adb exec-out screencap -p > android15.png
+      - name: Save Android 15 screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: android15-screen
+          path: android15.png
