@@ -1,0 +1,43 @@
+name: Android 15 APK installation
+on:
+  push:
+    paths: ['.github/workflows/android-install.yml']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: APK version to verify
+        default: '1.0.1'
+        required: true
+permissions:
+  contents: read
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download signed APK
+        env:
+          VERSION: ${{ inputs.version || '1.0.1' }}
+        run: |
+          curl --fail --location --retry 3 -o pepper.apk "https://github.com/zannetabapinaeva-wq/treker-perets/releases/download/v$VERSION/pepper-course-$VERSION.apk"
+          sha256sum pepper.apk
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install and launch on Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r pepper.apk
+            adb shell am start -W -n ru.peppercourse.app/.MainActivity
+            sleep 8
+            adb shell pidof ru.peppercourse.app
+            adb logcat -d -s AndroidRuntime
