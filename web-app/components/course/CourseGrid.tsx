@@ -1,0 +1,2 @@
+import {CourseDayCard} from './CourseDayCard';
+export function CourseGrid({day,completed,onSelect,compact=false}:{day:number;completed:number[];onSelect:(day:number)=>void;compact?:boolean}) {return <div className={`course-grid ${compact?'compact':''}`}>{Array.from({length:compact?10:30},(_,i)=><CourseDayCard key={i+1} day={i+1} current={day} done={completed.includes(i+1)} onSelect={onSelect}/>)}</div>;}

@@ -1,0 +1,1 @@
+export function ProgressBar({value}:{value:number}) { return <div className="progress-track" role="progressbar" aria-label="Выполнение курса" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}><div style={{width:`${value}%`}} /></div>; }

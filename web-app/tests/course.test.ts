@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {pepperCount,courseDay,validState,pepperLabel} from '../lib/course.ts';
+assert.deepEqual(Array.from({length:30},(_,i)=>pepperCount(i+1)),[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0]);
+assert.equal(courseDay('2026-10-02',new Date(2026,9,2,23,59)),1);
+assert.equal(courseDay('2026-09-26',new Date(2026,9,2,0,0)),7);
+assert.equal(courseDay('2026-10-03',new Date(2026,9,2)),0);
+assert.equal(courseDay('2026-09-03',new Date(2026,9,2)),30);
+assert.equal(courseDay('2026-09-02',new Date(2026,9,2)),31);
+assert.equal(courseDay('2026-03-07',new Date(2026,2,9)),3);
+const restored=validState(JSON.parse(JSON.stringify({startDate:'2026-09-26',completed:[1,1,2,30,-1,31],time:'24:99'})));
+assert.deepEqual(restored.completed,[1,2,30]);assert.equal(restored.time,'09:00');
+assert.equal(pepperLabel(1),'1 горошина');assert.equal(pepperLabel(7),'7 горошин');
+console.log('Course schedule, calendar boundaries, restoration and validation passed.');

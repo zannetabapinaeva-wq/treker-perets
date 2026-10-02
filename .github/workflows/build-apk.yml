@@ -1,0 +1,58 @@
+name: Build Pepper Course APK
+on:
+  push:
+    branches: ['feat/pepper-course-pwa']
+    paths: ['android-app/**', 'web-app/**', '.github/workflows/build-apk.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Install web dependencies and build bundled app
+        working-directory: android-app
+        run: |
+          npm install --no-audit --no-fund
+          ln -s ../android-app/node_modules ../web-app/node_modules
+          npm run build:web
+      - name: Preserve APK signing identity between builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: pepper-course-install-signing-v1
+      - name: Build installable APK
+        working-directory: android-app
+        run: gradle :app:assembleRelease --no-daemon
+      - name: Prepare APK
+        run: |
+          cp android-app/app/build/outputs/apk/release/app-release.apk pepper-course-1.1.0.apk
+          sha256sum pepper-course-1.1.0.apk > pepper-course-1.1.0.sha256
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose pepper-course-1.1.0.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pepper-course-apk
+          path: |
+            pepper-course-1.1.0.apk
+            pepper-course-1.1.0.sha256
+      - name: Publish downloadable APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create android-v1.1.0 pepper-course-1.1.0.apk pepper-course-1.1.0.sha256 --target "$GITHUB_SHA" --title "Курс перца — Android 1.1.0" --notes "Установочный APK для Android 8+. Работает без интернета. Локальный прогресс и системные напоминания. Установочная сборка подписана тестовым ключом; для Google Play нужен отдельный release-ключ." || gh release upload android-v1.1.0 pepper-course-1.1.0.apk pepper-course-1.1.0.sha256 --clobber
